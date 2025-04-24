@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Happy Bday Inkuuuur:D</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffcce6, #ccf2ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            touch-action: manipulation;
+        }
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+        .card {
+            position: absolute;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            transform: scale(0);
+            transition: transform 0.5s ease;
+            z-index: 100;
+        }
+        .card.show {
+            transform: scale(1);
+        }
+        .card h1 {
+            color: #ff66b3;
+            margin-top: 0;
+        }
+        .card p {
+            color: #666;
+            font-size: 18px;
+        }
+        .card button {
+            background: #ff66b3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        .card button:hover {
+            background: #ff3385;
+            transform: scale(1.05);
+        }
+        .hearts {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff66b3;
+            transform: rotate(45deg);
+            opacity: 0;
+        }
+        .heart:before, .heart:after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff66b3;
+            border-radius: 50%;
+        }
+        .heart:before {
+            top: -10px;
+            left: 0;
+        }
+        .heart:after {
+            top: 0;
+            left: -10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="catCanvas"></canvas>
+    <div class="card">
+        <h1>KARKARRR</h1>
+        <p>Kitik send you message from me</p>
+        <button id="closeCard">Happy Bday!</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('catCanvas');
+        const ctx = canvas.getContext('2d');
+        const card = document.querySelector('.card');
+        const closeBtn = document.getElementById('closeCard');
+        
+        // Установка размера canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Параметры котика (обновлённые)
+        const cat = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 120,
+            angle: 0,
+            tailAngle: 0,
+            blink: false,
+            blinkTime: 0,
+            happy: false,
+            purr: 0
+        };
+        
+        // Мышки для котика
+        const mice = [];
+        const maxMice = 5;
+        
+        // Создание мышки
+        function createMouse() {
+            if (mice.length < maxMice) {
+                mice.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: 20 + Math.random() * 15,
+                    speedX: (Math.random() - 0.5) * 3,
+                    speedY: (Math.random() - 0.5) * 3,
+                    color: `hsl(${Math.random() * 60 + 20}, 70%, 60%)`,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        // Создание сердечка
+        function createHeart(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = `${x - 10}px`;
+            heart.style.top = `${y - 10}px`;
+            (document.querySelector('.hearts') || document.body.appendChild(Object.assign(document.createElement('div'), {className: 'hearts'})));
+            document.querySelector('.hearts').appendChild(heart);
+            
+            // Анимация сердечка
+            const duration = 1000 + Math.random() * 1000;
+            const animation = heart.animate([
+                { opacity: 0.8, transform: 'rotate(45deg) scale(0.5)' },
+                { opacity: 0, transform: `rotate(45deg) scale(1.5) translate(0, -${100 + Math.random() * 50}px)` }
+            ], {
+                duration: duration,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            });
+            
+            animation.onfinish = () => heart.remove();
+        }
+        
+        // Рисование котика (обновлённое)
+        function drawCat() {
+            ctx.save();
+            ctx.translate(cat.x, cat.y);
+            
+            // Тело (овал)
+            ctx.fillStyle = '#ff9966';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, cat.size * 0.5, cat.size * 0.3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Голова (круг)
+            ctx.beginPath();
+            ctx.arc(0, -cat.size * 0.4, cat.size * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Ушки (треугольники)
+            // Левое ухо
+            ctx.beginPath();
+            ctx.moveTo(-cat.size * 0.25, -cat.size * 0.6);
+            ctx.lineTo(-cat.size * 0.4, -cat.size * 0.8);
+            ctx.lineTo(-cat.size * 0.15, -cat.size * 0.7);
+            ctx.fill();
+            
+            // Правое ухо
+            ctx.beginPath();
+            ctx.moveTo(cat.size * 0.25, -cat.size * 0.6);
+            ctx.lineTo(cat.size * 0.4, -cat.size * 0.8);
+            ctx.lineTo(cat.size * 0.15, -cat.size * 0.7);
+            ctx.fill();
+            
+            // Внутренняя часть ушек
+            ctx.fillStyle = '#ffcc99';
+            // Левое
+            ctx.beginPath();
+            ctx.moveTo(-cat.size * 0.22, -cat.size * 0.65);
+            ctx.lineTo(-cat.size * 0.32, -cat.size * 0.77);
+            ctx.lineTo(-cat.size * 0.17, -cat.size * 0.68);
+            ctx.fill();
+            // Правое
+            ctx.beginPath();
+            ctx.moveTo(cat.size * 0.22, -cat.size * 0.65);
+            ctx.lineTo(cat.size * 0.32, -cat.size * 0.77);
+            ctx.lineTo(cat.size * 0.17, -cat.size * 0.68);
+            ctx.fill();
+            
+            // Глаза (миндалевидные)
+            ctx.fillStyle = '#663300';
+            if (!cat.blink) {
+                // Левый глаз
+                ctx.beginPath();
+                ctx.ellipse(-cat.size * 0.15, -cat.size * 0.45, cat.size * 0.08, cat.size * 0.12, 0, 0, Math.PI);
+                ctx.fill();
+                // Правый глаз
+                ctx.beginPath();
+                ctx.ellipse(cat.size * 0.15, -cat.size * 0.45, cat.size * 0.08, cat.size * 0.12, 0, 0, Math.PI);
+                ctx.fill();
+                
+                // Зрачки
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-cat.size * 0.15 + Math.sin(cat.angle) * 3, -cat.size * 0.45 + Math.cos(cat.angle) * 2, cat.size * 0.04, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cat.size * 0.15 + Math.sin(cat.angle) * 3, -cat.size * 0.45 + Math.cos(cat.angle) * 2, cat.size * 0.04, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Прищуренные глаза (когда моргает)
+                ctx.strokeStyle = '#663300';
+                ctx.lineWidth = cat.size * 0.05;
+                // Левый
+                ctx.beginPath();
+                ctx.moveTo(-cat.size * 0.2, -cat.size * 0.45);
+                ctx.lineTo(-cat.size * 0.1, -cat.size * 0.45);
+                ctx.stroke();
+                // Правый
+                ctx.beginPath();
+                ctx.moveTo(cat.size * 0.2, -cat.size * 0.45);
+                ctx.lineTo(cat.size * 0.1, -cat.size * 0.45);
+                ctx.stroke();
+            }
+            
+            // Носик (треугольник)
+            ctx.fillStyle = '#ff6699';
+            ctx.beginPath();
+            ctx.moveTo(0, -cat.size * 0.4);
+            ctx.lineTo(-cat.size * 0.05, -cat.size * 0.35);
+            ctx.lineTo(cat.size * 0.05, -cat.size * 0.35);
+            ctx.fill();
+            
+            // Рот
+            ctx.strokeStyle = '#663300';
+            ctx.lineWidth = 2;
+            if (cat.happy) {
+                // Улыбка
+                ctx.beginPath();
+                ctx.arc(0, -cat.size * 0.3, cat.size * 0.1, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            } else {
+                // Нейтральный
+                ctx.beginPath();
+                ctx.moveTo(0, -cat.size * 0.35);
+                ctx.lineTo(0, -cat.size * 0.3);
+                ctx.stroke();
+            }
+            
+            // Усы (3 с каждой стороны)
+            for (let i = -1; i <= 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cat.size * 0.05, -cat.size * 0.35);
+                ctx.lineTo(cat.size * 0.3, -cat.size * 0.35 + i * 10);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(-cat.size * 0.05, -cat.size * 0.35);
+                ctx.lineTo(-cat.size * 0.3, -cat.size * 0.35 + i * 10);
+                ctx.stroke();
+            }
+            
+            // Лапки (овалы)
+            ctx.fillStyle = '#ff9966';
+            // Передние
+            ctx.beginPath();
+            ctx.ellipse(-cat.size * 0.25, 0, cat.size * 0.12, cat.size * 0.08, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(cat.size * 0.25, 0, cat.size * 0.12, cat.size * 0.08, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Хвост (изогнутый)
+            ctx.save();
+            ctx.rotate(Math.sin(cat.tailAngle) * 0.3);
+            ctx.beginPath();
+            ctx.moveTo(cat.size * 0.5, 0);
+            ctx.bezierCurveTo(
+                cat.size * 0.7, -cat.size * 0.2,
+                cat.size * 0.8, cat.size * 0.1,
+                cat.size * 0.6, cat.size * 0.3
+            );
+            ctx.fill();
+            ctx.restore();
+            
+            ctx.restore();
+        }
+        
+        // Рисование мышки
+        function drawMouse(mouse) {
+            ctx.save();
+            ctx.translate(mouse.x, mouse.y);
+            ctx.rotate(mouse.angle);
+            
+            // Тело
+            ctx.fillStyle = mouse.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, mouse.size * 0.6, mouse.size * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Голова
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.5, 0, mouse.size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Ушки
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.7, -mouse.size * 0.2, mouse.size * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.7, mouse.size * 0.2, mouse.size * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Глазки
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.6, -mouse.size * 0.1, mouse.size * 0.05, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.6, mouse.size * 0.1, mouse.size * 0.05, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Носик
+            ctx.beginPath();
+            ctx.arc(-mouse.size * 0.8, 0, mouse.size * 0.03, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Хвостик
+            ctx.strokeStyle = mouse.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(mouse.size * 0.5, 0);
+            ctx.lineTo(mouse.size * 0.9, mouse.size * 0.2);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        // Проверка столкновений
+        function checkCollisions() {
+            for (let i = 0; i < mice.length; i++) {
+                const mouse = mice[i];
+                const dx = cat.x - mouse.x;
+                const dy = cat.y - mouse.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < cat.size * 0.5 + mouse.size * 0.6) {
+                    // Котик поймал мышку
+                    mice.splice(i, 1);
+                    i--;
+                    
+                    // Котик становится счастливым
+                    cat.happy = true;
+                    setTimeout(() => cat.happy = false, 2000);
+                    
+                    // Создаем сердечки
+                    for (let j = 0; j < 5; j++) {
+                        setTimeout(() => {
+                            createHeart(cat.x + (Math.random() - 0.5) * 50, cat.y - cat.size);
+                        }, j * 100);
+                    }
+                    
+                    // Показываем открытку после 3 пойманных мышек
+                    if (mice.length <= 2 && !card.classList.contains('show')) {
+                        setTimeout(() => {
+                            card.classList.add('show');
+                        }, 1000);
+                    }
+                }
+            }
+        }
+        
+        // Анимация
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Обновление котика
+            cat.angle += 0.02;
+            cat.tailAngle += 0.1;
+            cat.purr += 0.05;
+            
+            // Моргание
+            if (Math.random() < 0.005 && !cat.blink) {
+                cat.blink = true;
+                cat.blinkTime = 5;
+            }
+            
+            if (cat.blink) {
+                cat.blinkTime--;
+                if (cat.blinkTime <= 0) {
+                    cat.blink = false;
+                }
+            }
+            
+            // Движение котика к курсору
+            if (mouseX !== null && mouseY !== null) {
+                const dx = mouseX - cat.x;
+                const dy = mouseY - cat.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 10) {
+                    cat.x += dx * 0.05;
+                    cat.y += dy * 0.05;
+                }
+            }
+            
+            // Обновление мышек
+            for (const mouse of mice) {
+                mouse.x += mouse.speedX;
+                mouse.y += mouse.speedY;
+                mouse.angle += 0.05;
+                
+                // Отскок от стен
+                if (mouse.x < 0 || mouse.x > canvas.width) mouse.speedX *= -1;
+                if (mouse.y < 0 || mouse.y > canvas.height) mouse.speedY *= -1;
+            }
+            
+            // Случайное создание мышек
+            if (Math.random() < 0.01 && mice.length < maxMice) {
+                createMouse();
+            }
+            
+            // Рисование
+            for (const mouse of mice) {
+                drawMouse(mouse);
+            }
+            
+            drawCat();
+            checkCollisions();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Обработчики событий
+        let mouseX = null;
+        let mouseY = null;
+        
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            mouseX = e.touches[0].clientX;
+            mouseY = e.touches[0].clientY;
+        }, { passive: false });
+        
+        closeBtn.addEventListener('click', () => {
+            card.classList.remove('show');
+        });
+        
+        // Запуск анимации
+        animate();
+        
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
